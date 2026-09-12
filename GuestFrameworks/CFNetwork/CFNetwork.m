@@ -380,6 +380,24 @@ CFReadStreamRef CFReadStreamCreateForStreamedHTTPRequest(
             LC32_CFNETWORK_HOST(requestBody)) : NULL;
 }
 
+void CFStreamCreatePairWithSocketToCFHost(CFAllocatorRef allocator,
+                                          CFHostRef host, SInt32 port,
+                                          CFReadStreamRef *readStream,
+                                          CFWriteStreamRef *writeStream) {
+    (void)allocator;
+    if(readStream) *readStream = NULL;
+    if(writeStream) *writeStream = NULL;
+    if(!host || (!readStream && !writeStream)) return;
+
+    /* The host receives native CFHost identity but guest output addresses.
+     * It must return owned ARM32 proxies, never native stream pointers. */
+    LC32_CFNETWORK_CALL(
+        LC32CFNetworkOpStreamCreatePairWithSocketToCFHost,
+        LC32_CFNETWORK_HOST(host), LC32_CFNETWORK_U32(port),
+        LC32_CFNETWORK_U32((uintptr_t)readStream),
+        LC32_CFNETWORK_U32((uintptr_t)writeStream));
+}
+
 CFTypeID CFHostGetTypeID(void) {
     return (CFTypeID)LC32_CFNETWORK_CALL0(LC32CFNetworkOpHostGetTypeID);
 }

@@ -444,6 +444,38 @@ u32 LC32_CFNetwork_Dispatch(u32 opcodeValue, u32 guestCall, u32) {
                     kCFAllocatorDefault,
                     SlotHostObject<CFHTTPMessageRef>(call, 0),
                     SlotHostObject<CFReadStreamRef>(call, 1))) : 0;
+        case LC32CFNetworkOpStreamCreatePairWithSocketToCFHost: {
+            if(!RequireSlots(call, 4)) return 0;
+            CFHostRef host = SlotHostObject<CFHostRef>(call, 0);
+            const SInt32 port = static_cast<SInt32>(SlotU32(call, 1));
+            const u32 guestReadStream = SlotU32(call, 2);
+            const u32 guestWriteStream = SlotU32(call, 3);
+            if(!host || (!guestReadStream && !guestWriteStream) ||
+               (guestReadStream && guestWriteStream &&
+                    guestReadStream == guestWriteStream)) {
+                return 0;
+            }
+            // Validate and clear each 32-bit output before creating streams.
+            if(!WriteGuestCreatedObject(guestReadStream, nullptr) ||
+               !WriteGuestCreatedObject(guestWriteStream, nullptr)) {
+                return 0;
+            }
+
+            CFReadStreamRef readStream = nullptr;
+            CFWriteStreamRef writeStream = nullptr;
+            // Pass the CFHost itself so native CFNetwork preserves resolved
+            // addresses and defers resolution/connection until stream open.
+            CFStreamCreatePairWithSocketToCFHost(
+                kCFAllocatorDefault, host, port,
+                guestReadStream ? &readStream : nullptr,
+                guestWriteStream ? &writeStream : nullptr);
+
+            if(!WriteGuestCreatedObject(guestReadStream, readStream)) {
+                if(writeStream) CFRelease(writeStream);
+                return 0;
+            }
+            return WriteGuestCreatedObject(guestWriteStream, writeStream);
+        }
         case LC32CFNetworkOpHostGetTypeID:
             return RequireSlots(call, 0)
                 ? static_cast<u32>(CFHostGetTypeID()) : 0;

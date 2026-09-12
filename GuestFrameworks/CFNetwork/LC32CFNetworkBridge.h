@@ -74,6 +74,7 @@ typedef enum : uint32_t {
     LC32CFNetworkOpReadStreamCreateForStreamedHTTPRequest = 57,
     LC32CFNetworkOpHostStartInfoResolution = 58,
     LC32CFNetworkOpHostCancelInfoResolution = 59,
+    LC32CFNetworkOpStreamCreatePairWithSocketToCFHost = 60,
 } LC32CFNetworkOpcode;
 
 #endif

@@ -39,3 +39,4 @@ CFNetServiceGetTypeID
 CFNetServiceSetTXTData
 CFNetworkCopyProxiesForAutoConfigurationScript
 CFReadStreamCreateForStreamedHTTPRequest
+CFStreamCreatePairWithSocketToCFHost
