@@ -40,7 +40,7 @@ audit() {
     sed 's/^_//' "$work/$framework.nm" > "$work/$framework.names"
     LC_ALL=C sort -u "$work/$framework.names" \
         > "$work/$framework.actual"
-    comm -23 "$expected" "$work/$framework.actual" \
+    LC_ALL=C comm -23 "$expected" "$work/$framework.actual" \
         > "$work/$framework.missing"
     if [ -s "$work/$framework.missing" ]; then
         echo "$framework is missing public guest symbols:" >&2
