@@ -45,6 +45,10 @@ audit() {
     if [ -s "$work/$framework.missing" ]; then
         echo "$framework is missing public guest symbols:" >&2
         sed 's/^/  /' "$work/$framework.missing" >&2
+        echo "Audited image:" >&2
+        file "$image" >&2
+        echo "First 20 defined external symbols reported by nm:" >&2
+        sed -n '1,20p' "$work/$framework.nm" >&2
         exit 1
     fi
 
