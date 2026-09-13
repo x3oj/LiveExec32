@@ -208,6 +208,7 @@ $(eval $(call lc32_guest_test,lc32-cfset-callbacks,cfset_callbacks.m,Foundation 
 $(eval $(call lc32_guest_test,lc32-cfnetwork-http,cfnetwork_http.m,CFNetwork CoreFoundation Foundation LC32))
 $(eval $(call lc32_guest_test,lc32-cfnetwork-host-resolution,cfnetwork_host_resolution.m,CFNetwork CoreFoundation Foundation))
 $(eval $(call lc32_guest_test,lc32-cfnetwork-stream-cfhost,cfnetwork_stream_cfhost.m,CFNetwork CoreFoundation Foundation))
+$(eval $(call lc32_guest_test,lc32-cfnetwork-stream-cfhost-io,cfnetwork_stream_cfhost_io.m,CFNetwork CoreFoundation Foundation))
 $(eval $(call lc32_guest_test,lc32-collection-object-buffers,collection_object_buffers.m,Foundation))
 $(eval $(call lc32_guest_test,lc32-class-cluster-reuse,class_cluster_reuse.m,Foundation CoreFoundation LC32))
 $(eval $(call lc32_guest_test,lc32-guest-input-stream,guest_input_stream.m,Foundation LC32))
@@ -339,6 +340,7 @@ lc32-foundation-null-utf8_CFLAGS := -fno-objc-arc
 lc32-ext-audio-file-wrap_CFLAGS := -Wall -Wextra -Werror
 lc32-cfnetwork-host-resolution_CFLAGS := -fno-objc-arc -Wall -Wextra -Werror -Wno-deprecated-declarations
 lc32-cfnetwork-stream-cfhost_CFLAGS := -fno-objc-arc -Wall -Wextra -Werror -Wno-deprecated-declarations
+lc32-cfnetwork-stream-cfhost-io_CFLAGS := -fno-objc-arc -Wall -Wextra -Werror -Wno-deprecated-declarations
 lc32-foundation-constants_CFLAGS := -fno-objc-arc -Wall -Wextra -Werror
 lc32-locale-constants_CFLAGS := -fno-objc-arc -Wall -Wextra -Werror
 lc32-imageio-roundtrip_CFLAGS := -fno-objc-arc -Wall -Wextra -Werror
