@@ -76,6 +76,7 @@ u64 LC32InvokeHostNSStringFormat(u64 host_self,
                                  u32 guest_arguments,
                                  u32 options);
 void LC32SetInvokeGuestFuncPtr(u32 dlsymFunc, u32 invokeFunc);
+void LC32InstallGuestMainQueueRunLoop(void);
 u64 LC32InvokeGuestC(u32 pc, bool ret64, int argc, u32 *args);
 // Current host-to-guest callback nesting, including a callback parked in a
 // native nested run loop. Used to recognize the outer UIKit startup boundary.

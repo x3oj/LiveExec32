@@ -2479,10 +2479,12 @@ u32 LC32_CoreFoundation_Dispatch(u32 opcodeValue, u32 guestCall, u32) {
         }
         case LC32CoreFoundationOpRunLoopRun:
             if(!RequireSlots(call, 0)) return 0;
+            LC32InstallGuestMainQueueRunLoop();
             CFRunLoopRun();
             return 1;
         case LC32CoreFoundationOpRunLoopRunInMode: {
             if(!RequireSlots(call, 3)) return 0;
+            LC32InstallGuestMainQueueRunLoop();
             CFRunLoopMode mode =
                 SlotHostObject<CFRunLoopMode>(call, 0);
             return mode ? static_cast<u32>(static_cast<int32_t>(

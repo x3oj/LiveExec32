@@ -39,3 +39,25 @@ The local Linux environment cannot run the required macOS/Catalyst build. Until
 the Actions run succeeds, native compilation, runtime tests, and IPA packaging
 remain unverified. The Roblox/Hexagon app and the user's iPhone have not been
 tested, so this change does not establish compatibility with the entire app.
+
+## Guest main-queue delivery
+
+The native CoreFoundation run loop does not automatically service the ARM32
+libdispatch main queue. `main_queue.mm` attaches that queue's existing Mach
+wakeup port to the native main run loop in common modes. Its callback invokes
+the guest libdispatch drain routine on the registered main guest thread. The
+native message buffer is never passed into guest memory, and the guest retains
+ownership of its port. Both UIKit startup and explicit CFRunLoop entry install
+the source; background run loops do not install or drain it.
+
+`urlconnection_main_queue.m operation` isolates the background operation to
+`dispatch_sync(main)` handoff, without depending on DNS or a remote service.
+The HTTP variant additionally checks NSURLConnection completion delivery.
+The CI runner compares HTTP with a native Catalyst control because Catalyst
+network initialization can wait on RunningBoard services in a command-line
+process. Such a control failure is reported as inconclusive, not a transport
+pass. The isolated main-queue regression remains mandatory.
+
+This does not repair unavailable application backend routes. In particular,
+the uploaded legacy client's signup URL uses a separate mobile hostname.
+No proprietary client binary or account credentials are included in these tests.

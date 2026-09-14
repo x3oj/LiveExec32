@@ -3498,6 +3498,7 @@ u32 LC32_UIKit_UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(
 }
 
 int LC32_UIKit_UIApplicationMain(u32 r2, u32 r3, u32 sp) {
+    LC32InstallGuestMainQueueRunLoop();
     static bool firstEntry = true;
     if(!firstEntry) {
         return LC32RunDebuggerAwareMainRunLoop();
