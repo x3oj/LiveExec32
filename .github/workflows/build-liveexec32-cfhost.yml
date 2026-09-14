@@ -124,12 +124,19 @@ jobs:
       run: |
         set -euo pipefail
         export LC32_GUEST_HOME="$RUNNER_TEMP/lc32-guest-home"
+        # Match the Catalyst app's bundle identity as well as its platform.
+        # A bare command-line executable does not exercise app assertions.
+        native_control="$RUNNER_TEMP/NativeNetworkControl.app"
+        mkdir -p "$native_control"
+        cp .theos/obj/LiveExec32.app/Info.plist "$native_control/Info.plist"
+        cp "$RUNNER_TEMP/urlconnection-main-queue-catalyst" "$native_control/LiveExec32"
+        codesign --force --sign - "$native_control"
         python3 test/run_cfhost_stream_io.py \
           --native "$RUNNER_TEMP/cfhost-stream-io-native" \
           --launcher "$PWD/.theos/obj/LiveExec32.app/LiveExec32" \
           --guest "$RUNNER_TEMP/lc32-tests/lc32-cfnetwork-stream-cfhost-io" \
           --urlconnection-native "$RUNNER_TEMP/urlconnection-main-queue-native" \
-          --urlconnection-catalyst "$RUNNER_TEMP/urlconnection-main-queue-catalyst" \
+          --urlconnection-catalyst "$native_control/LiveExec32" \
           --urlconnection-guest "$RUNNER_TEMP/lc32-tests/lc32-urlconnection-main-queue" \
           --probe-host hexagon.pw
     - name: Build iOS IPA
