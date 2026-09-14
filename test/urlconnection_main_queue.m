@@ -3,6 +3,8 @@
 #include <dispatch/dispatch.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+#include <sys/time.h>
 
 // Match the legacy client's Foundation completion -> dispatch_sync(main)
 // handoff. No credentials or requests to a real login service are used.
@@ -21,8 +23,8 @@ int main(int argc, char **argv) {
     __block BOOL mainIdentity = NO;
     __block BOOL workerIdentity = NO;
     __block BOOL responseOK = NO;
-    [NSURLConnection sendAsynchronousRequest:request queue:queue
-        completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
+    void (^completion)(NSURLResponse *, NSData *, NSError *) =
+        ^(NSURLResponse *response, NSData *data, NSError *error) {
             puts("urlconnection-stage: completion entered");
             workerIdentity = ![NSThread isMainThread];
             completionCalled = YES;
@@ -37,13 +39,27 @@ int main(int argc, char **argv) {
                 mainCalled = YES;
                 printf("urlconnection-main-handoff: main=%d\n", mainIdentity);
             });
+        };
+    if(strcmp(argv[1], "operation") == 0) {
+        [queue addOperationWithBlock:^{
+            NSURL *fixture = [NSURL URLWithString:@"http://127.0.0.1/"];
+            NSHTTPURLResponse *response = [[[NSHTTPURLResponse alloc]
+                initWithURL:fixture statusCode:200 HTTPVersion:@"HTTP/1.1"
+                headerFields:nil] autorelease];
+            completion(response, [@"LC32-CFHOST-IO-OK" dataUsingEncoding:NSUTF8StringEncoding], nil);
         }];
+    } else {
+        [NSURLConnection sendAsynchronousRequest:request queue:queue completionHandler:completion];
+    }
     puts("urlconnection-stage: asynchronous submission returned");
     [queue release];
     puts("urlconnection-stage: queue released; entering run loop");
-    CFAbsoluteTime deadline = CFAbsoluteTimeGetCurrent() + 10;
-    while(!mainCalled && CFAbsoluteTimeGetCurrent() < deadline) {
+    struct timeval started, now;
+    gettimeofday(&started, NULL);
+    now = started;
+    while(!mainCalled && now.tv_sec - started.tv_sec < 10) {
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.05, true);
+        gettimeofday(&now, NULL);
     }
     BOOL passed = completionCalled && mainCalled && mainIdentity && workerIdentity && responseOK;
     printf("urlconnection-main-queue: %s completion=%d main=%d response=%d\n",

@@ -50,6 +50,7 @@ def main():
     parser.add_argument("--probe-host")
     parser.add_argument("--urlconnection-native")
     parser.add_argument("--urlconnection-guest")
+    parser.add_argument("--urlconnection-catalyst")
     args = parser.parse_args()
     native = [args.native]
     guest = [args.launcher, args.guest]
@@ -65,9 +66,16 @@ def main():
         ]
         try:
             if args.urlconnection_native and args.urlconnection_guest:
+                failures += not run([args.urlconnection_native], ["operation"])
+                failures += not run([args.launcher, args.urlconnection_guest], ["operation"], diagnose=True)
                 url = [f"http://127.0.0.1:{port}/"]
                 failures += not run([args.urlconnection_native], url)
-                failures += not run([args.launcher, args.urlconnection_guest], url, diagnose=True)
+                catalyst_ok = not args.urlconnection_catalyst or run([args.urlconnection_catalyst], url, diagnose=True)
+                guest_ok = run([args.launcher, args.urlconnection_guest], url, diagnose=True)
+                if catalyst_ok:
+                    failures += not guest_ok
+                else:
+                    print("NSURLConnection transport inconclusive: native Catalyst control also failed", flush=True)
             for case in cases:
                 failures += not run(native, case)
                 failures += not run(guest, case)
