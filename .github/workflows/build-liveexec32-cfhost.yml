@@ -71,7 +71,7 @@ jobs:
       shell: bash
       run: |
         set -euo pipefail
-        gmake -C test cfnetwork-stream-cfhost cfnetwork-stream-cfhost-io TEST_OUTPUT_DIR="$RUNNER_TEMP/lc32-tests"
+        gmake -C test cfnetwork-stream-cfhost cfnetwork-stream-cfhost-io urlconnection-main-queue TEST_OUTPUT_DIR="$RUNNER_TEMP/lc32-tests"
         bash test/public_guest_constants.sh
     - name: Check native CFHost stream behavior
       shell: bash
@@ -87,6 +87,10 @@ jobs:
           -Wno-deprecated-declarations test/cfnetwork_stream_cfhost_io.m \
           -framework CFNetwork -framework CoreFoundation -framework Foundation \
           -o "$RUNNER_TEMP/cfhost-stream-io-native"
+        xcrun --sdk macosx clang -fno-objc-arc -fblocks -Wall -Wextra -Werror \
+          -Wno-deprecated-declarations test/urlconnection_main_queue.m \
+          -framework Foundation -framework CoreFoundation \
+          -o "$RUNNER_TEMP/urlconnection-main-queue-native"
     - name: Assemble guest root filesystem
       run: bash GuestMakefile/pack-ramdisk.sh
     - name: Save extracted guest ramdisk
@@ -119,6 +123,8 @@ jobs:
           --native "$RUNNER_TEMP/cfhost-stream-io-native" \
           --launcher "$PWD/.theos/obj/LiveExec32.app/LiveExec32" \
           --guest "$RUNNER_TEMP/lc32-tests/lc32-cfnetwork-stream-cfhost-io" \
+          --urlconnection-native "$RUNNER_TEMP/urlconnection-main-queue-native" \
+          --urlconnection-guest "$RUNNER_TEMP/lc32-tests/lc32-urlconnection-main-queue" \
           --probe-host hexagon.pw
     - name: Build iOS IPA
       run: gmake package LC32_BUILD_CATALYST=0

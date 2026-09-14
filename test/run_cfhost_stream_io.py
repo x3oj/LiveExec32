@@ -32,6 +32,8 @@ def main():
     parser.add_argument("--launcher", required=True)
     parser.add_argument("--guest", required=True)
     parser.add_argument("--probe-host")
+    parser.add_argument("--urlconnection-native")
+    parser.add_argument("--urlconnection-guest")
     args = parser.parse_args()
     native = [args.native]
     guest = [args.launcher, args.guest]
@@ -46,6 +48,10 @@ def main():
             ["localhost", port, "plain", "poll", "marker", "resolved"],
         ]
         try:
+            if args.urlconnection_native and args.urlconnection_guest:
+                url = [f"http://127.0.0.1:{port}/"]
+                failures += not run([args.urlconnection_native], url)
+                failures += not run([args.launcher, args.urlconnection_guest], url)
             for case in cases:
                 failures += not run(native, case)
                 failures += not run(guest, case)
