@@ -20,8 +20,8 @@ void LC32InstallGuestMainQueueRunLoop(void) {
     // the generic callback worker. UIKit and the CFRunLoop shims enter here
     // only after guest libdispatch has finished loading.
     static bool installed = false;
-    if(installed || !pthread_main_np() ||
-       !Dynarmic_guest_thread_is_registered()) return;
+    if(!pthread_main_np() || !Dynarmic_guest_thread_is_registered()) return;
+    if(installed) return;
 
     const u32 getPort = guest_dlsym("_dispatch_get_main_queue_port_4CF");
     const u32 drain = guest_dlsym("_dispatch_main_queue_callback_4CF");
