@@ -9,11 +9,13 @@
 int main(int argc, char **argv) {
     if(argc != 2) return 2;
     setvbuf(stdout, NULL, _IONBF, 0);
+    puts("urlconnection-stage: entered main");
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
     NSURL *url = [NSURL URLWithString:[NSString stringWithUTF8String:argv[1]]];
     NSURLRequest *request = [NSURLRequest requestWithURL:url
         cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:5.0];
     NSOperationQueue *queue = [NSOperationQueue new];
+    puts("urlconnection-stage: request and queue created");
     __block volatile BOOL completionCalled = NO;
     __block volatile BOOL mainCalled = NO;
     __block BOOL mainIdentity = NO;
@@ -21,6 +23,7 @@ int main(int argc, char **argv) {
     __block BOOL responseOK = NO;
     [NSURLConnection sendAsynchronousRequest:request queue:queue
         completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
+            puts("urlconnection-stage: completion entered");
             workerIdentity = ![NSThread isMainThread];
             completionCalled = YES;
             responseOK = !error && [(NSHTTPURLResponse *)response statusCode] == 200 &&
@@ -35,7 +38,9 @@ int main(int argc, char **argv) {
                 printf("urlconnection-main-handoff: main=%d\n", mainIdentity);
             });
         }];
+    puts("urlconnection-stage: asynchronous submission returned");
     [queue release];
+    puts("urlconnection-stage: queue released; entering run loop");
     CFAbsoluteTime deadline = CFAbsoluteTimeGetCurrent() + 10;
     while(!mainCalled && CFAbsoluteTimeGetCurrent() < deadline) {
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.05, true);

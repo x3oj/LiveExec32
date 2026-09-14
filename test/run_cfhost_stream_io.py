@@ -1,6 +1,7 @@
 """Compare native and ARM32 CFHost I/O against a controlled HTTP server."""
 import argparse
 import http.server
+import os
 import subprocess
 import threading
 
@@ -17,13 +18,28 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass
 
 
-def run(command, case):
+def run(command, case, diagnose=False):
     print("Testing:", *command, *case, flush=True)
+    env = os.environ.copy()
+    if diagnose:
+        # Only synthetic localhost requests: never enable verbose tracing
+        # for requests containing a user's authentication data.
+        env.update(LC32_BLOCK_TRACE="1", LC32_NETWORK_TRACE="1", LC32_OPERATION_TRACE="1")
+    process = subprocess.Popen(command + case, env=env)
     try:
-        return subprocess.run(command + case, timeout=25).returncode == 0
+        return process.wait(timeout=25) == 0
     except subprocess.TimeoutExpired:
+        if diagnose:
+            try:
+                subprocess.run(["sample", str(process.pid), "1", "1"], timeout=10)
+            except (OSError, subprocess.TimeoutExpired):
+                pass
         print("FAIL: stream transfer timed out", flush=True)
         return False
+    finally:
+        if process.poll() is None:
+            process.kill()
+        process.wait()
 
 
 def main():
@@ -51,7 +67,7 @@ def main():
             if args.urlconnection_native and args.urlconnection_guest:
                 url = [f"http://127.0.0.1:{port}/"]
                 failures += not run([args.urlconnection_native], url)
-                failures += not run([args.launcher, args.urlconnection_guest], url)
+                failures += not run([args.launcher, args.urlconnection_guest], url, diagnose=True)
             for case in cases:
                 failures += not run(native, case)
                 failures += not run(guest, case)
